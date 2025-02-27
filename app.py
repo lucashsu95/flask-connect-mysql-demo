@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
+
+from ApiResponse import ApiResponse
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:950423@localhost:3306/web01'
@@ -15,42 +17,28 @@ class User(db.Model):
 @app.route('/users', methods=['GET'])
 def get_users():
     users = User.query.all()
-    users_list = []
-    for user in users:
-        users_list.append({
-            'id': user.id,
-            'account': user.account,
-            'password': user.password
-        })
-    return jsonify(users_list), 200
-
+    users_list = [ApiResponse.format_user(user) for user in users]
+    return ApiResponse.success(users_list)
 
 @app.route('/users', methods=['POST'])
 def add_user():
     data = request.get_json()
     existing_user = User.query.filter_by(account=data['account']).first()
     if existing_user:
-        return jsonify({
-            "message": "Account already exists",
-            "error": "duplicate_account"
-        }), 409
+        return ApiResponse.fail("Account already exists", 409)
     
     new_user = User(account=data['account'], password=data['password'])
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"message": "User added successfully!"}), 201
+    return ApiResponse.success("User added successfully!")
 
 @app.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     user = User.query.get(user_id)
     if user:
-        return jsonify({
-            'id': user.id,
-            'account': user.account,
-            'password': user.password
-        }), 200
+        return ApiResponse.success(ApiResponse.format_user(user))
     else:
-        return jsonify({"message": "User not found"}), 404
+        return ApiResponse.fail("User not found")
 
 @app.route('/users/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
@@ -60,9 +48,9 @@ def update_user(user_id):
         user.account = data['account']
         user.password = data['password']
         db.session.commit()
-        return jsonify({"message": "User updated successfully!"}), 200
+        return ApiResponse.success("User updated successfully!")
     else:
-        return jsonify({"message": "User not found"}), 404
+        return ApiResponse.fail("User not found")
 
 @app.route('/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
@@ -70,9 +58,9 @@ def delete_user(user_id):
     if user:
         db.session.delete(user)
         db.session.commit()
-        return jsonify({"message": "User deleted successfully!"}), 200
+        return ApiResponse.success("User deleted successfully!")
     else:
-        return jsonify({"message": "User not found"}), 404
+        return ApiResponse.fail("User not found")
 
 if __name__ == '__main__':
     with app.app_context():
