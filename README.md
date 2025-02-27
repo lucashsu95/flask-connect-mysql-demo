@@ -12,8 +12,8 @@
 
 1. 克隆專案：
 ```bash
-git clone 
-cd <project-directory>
+git clone https://github.com/lucashsu95/flask-connect-mysql-demo
+cd flask-connect-mysql-demo
 ```
 
 2. 建立虛擬環境：
@@ -31,6 +31,7 @@ pip install -r requirements.txt
 ```sql
 CREATE DATABASE web01;
 ```
+或是直接匯入`web01.sql`
 
 5. 啟動應用程式：
 ```bash
